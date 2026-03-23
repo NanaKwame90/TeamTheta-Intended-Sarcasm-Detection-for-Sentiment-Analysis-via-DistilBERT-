@@ -1,0 +1,7 @@
+model,split,accuracy,f1_macro,f1_sarcastic
+tfidf_linearsvc,val,0.7524,0.5163,0.1783
+tfidf_linearsvc,test,0.8371,0.5668,0.2245
+bert-base-uncased,val,0.7543,0.5946,0.3402
+bert-base-uncased,test,0.8114,0.615,0.34
+distilbert-base-uncased,val,0.7313,0.5765,0.3204
+distilbert-base-uncased,test,0.7836,0.5996,0.3282

@@ -1,0 +1,5 @@
+{
+  "accuracy": 0.7543,
+  "f1_macro": 0.5946,
+  "f1_sarcastic": 0.3402
+}
