@@ -19,7 +19,7 @@ teamtheta/
 │   ├── run_baseline.py
 │   ├── run_transformer.py
 │   └── run_all.py
-├── data/       
+├── data/               
 ├── outputs/   
 ├── requirements.txt
 └── .gitignore
@@ -43,26 +43,7 @@ Python ≥ 3.10 recommended.
 
 ---
 
-## 2. Obtain and place the dataset
-
-1. Download the iSarcasmEval dataset from the official repository:
-   <https://github.com/iabufarha/iSarcasmEval>
-
-2. Unzip so that the following files exist:
-
-   ```
-   data/raw/iSarcasmEval/train/train.En.csv
-   data/raw/iSarcasmEval/task_A_En_test.csv   ← optional (gold labels)
-   ```
-
-   The train CSV must have at minimum the columns **`tweet`** and **`sarcastic`** (0 / 1).
-   If the test file is absent the scripts still run; test evaluation is simply skipped.
-
-> **Note:** The `data/` directory is gitignored. Never commit raw data files.
-
----
-
-## 3. Run the experiments
+## 2. Run the experiments
 
 ### Baseline (TF-IDF + LinearSVC)
 
@@ -94,7 +75,7 @@ python scripts/run_all.py
 
 ---
 
-## 4. Outputs
+## 3. Outputs
 
 All outputs are written to `outputs/`:
 
@@ -109,7 +90,7 @@ All outputs are written to `outputs/`:
 
 ---
 
-## 5. Configuration defaults
+## 4. Configuration defaults
 
 All defaults live in [src/utils/config.py](src/utils/config.py):
 
@@ -126,7 +107,7 @@ Override any default by passing CLI flags (see §3).
 
 ---
 
-## 6. Reproducibility
+## 5. Reproducibility
 
 - `src/utils/seed.py` sets seeds for Python, NumPy, and PyTorch.
 - The HuggingFace `Trainer` receives the same seed via `TrainingArguments(seed=42)`.
