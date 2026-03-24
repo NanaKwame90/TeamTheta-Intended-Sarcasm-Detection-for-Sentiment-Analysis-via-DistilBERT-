@@ -69,6 +69,7 @@ def load_splits(
 
     train_df = _read_csv(train_path)
     _validate_columns(train_df, train_path, _TEXT_COL_TRAIN)
+    train_df = train_df.dropna(subset=[_TEXT_COL_TRAIN, _LABEL_COL])
 
     texts = train_df[_TEXT_COL_TRAIN].astype(str).tolist()
     labels = train_df[_LABEL_COL].astype(int).tolist()
