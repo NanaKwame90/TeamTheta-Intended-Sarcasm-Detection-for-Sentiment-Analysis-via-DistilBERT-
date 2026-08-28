@@ -1,98 +1,109 @@
-# TeamTheta – SemEval 2022 Task 6 iSarcasmEval (English, Subtask A)
+# Efficient Intended Sarcasm Detection via DistilBERT & Hardware Acceleration
 
-Binary sarcasm detection on English tweets.
-Three models: TF-IDF + LinearSVC (baseline), BERT, DistilBERT.
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![PyTorch 2.1](https://img.shields.io/badge/PyTorch-2.1-EE4C2C.svg)](https://pytorch.org/)
+[![Hugging Face Transformers](https://img.shields.io/badge/%F0%9F%A4%97-Transformers-yellow)](https://huggingface.co/docs/transformers/index)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+An end-to-end NLP pipeline for binary intended sarcasm detection on English tweets from **SemEval 2022 Task 6 (iSarcasmEval)**.
+
+This repository evaluates the efficiency–performance trade-off between **BERT-base**, **DistilBERT**, and a **TF-IDF + LinearSVC** baseline, featuring cross-platform acceleration across **Apple Silicon (MPS)** and **NVIDIA CUDA (T4)** backends.
 
 ---
 
-## Project structure
+## 📊 Key Results
+
+Under a severe **3:1 class imbalance** (2,600 non-sarcastic vs. 867 sarcastic instances), models are evaluated using **F1-Macro** and **F1-Sarcastic**:
+
+| Model | Accuracy | F1-Macro | F1-Sarcastic | Notes |
+| :--- | :---: | :---: | :---: | :--- |
+| **TF-IDF + LinearSVC** | **0.837** | 0.567 | 0.225 | Fast CPU baseline |
+| **BERT-base (uncased)** | 0.811 | **0.615** | **0.340** | 110M params, 12 layers, d=768 |
+| **DistilBERT (uncased)** | 0.784 | **0.600** | 0.328 | 66M params, retains **97.5%** of BERT F1 |
+
+> **Takeaway:** DistilBERT retains **97.5%** of BERT-base macro F1 while reducing the parameter footprint by **40%**, making it suitable for resource-constrained deployment.
+
+---
+
+## ⚡ Hardware Acceleration & Infrastructure
+
+- **Local Prototyping (Apple Silicon MPS):** Tokenization debugging and local runs via `torch.device("mps")` achieving **98.34 samples/sec** (~4.2 min/epoch).
+- **Cloud Scaling (NVIDIA T4 CUDA):** High-throughput training on NVIDIA T4 GPUs reduced per-epoch time by ~40% (~1.7 min/epoch savings).
+- **Data Engineering:** Custom **Apache Arrow** schema handling implemented to mitigate missing values and enforce UTF-8 integrity across tweet tokens.
+
+---
+
+## 📁 Repository Structure
 
 ```
 teamtheta/
 ├── src/
-│   ├── data/           # Dataset loading & preprocessing
-│   ├── models/         # Model definitions (baseline + transformer wrapper)
-│   ├── training/       # Training loops
-│   ├── eval/           # Shared metrics & evaluation helpers
-│   └── utils/          # Config defaults, seed, logger
+│   ├── data/           # Dataset loading, custom schema fixes, & tokenization
+│   ├── models/         # Model definitions (LinearSVC & Transformer wrappers)
+│   ├── training/       # Training loops & HuggingFace Trainer configuration
+│   ├── eval/           # Shared evaluation metrics (F1-Macro, confusion matrices)
+│   └── utils/          # Config defaults, seed management, and loggers
 ├── scripts/
-│   ├── run_baseline.py
-│   ├── run_transformer.py
-│   └── run_all.py
-├── data/               
-├── outputs/   
+│   ├── run_baseline.py    # Run TF-IDF + LinearSVC baseline
+│   ├── run_transformer.py # Run BERT / DistilBERT fine-tuning
+│   └── run_all.py         # End-to-end evaluation pipeline
+├── data/               # Gitignored (raw dataset storage)
+├── outputs/            # Gitignored (generated figures & model checkpoints)
 ├── requirements.txt
-└── .gitignore
+└── README.md
 ```
 
 ---
 
-## 1. Set up the environment
+## 🚀 Getting Started
+
+### 1. Environment Setup
 
 ```bash
+git clone https://github.com/NanaKwame90/TeamTheta.git
+cd TeamTheta
+
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
 
-Python ≥ 3.10 recommended.
+### 2. Dataset Setup
 
----
+Download the [SemEval 2022 Task 6 dataset](https://github.com/iabufarha/iSarcasmEval) and place the training split at:
 
-## 2. Run the experiments
+```
+data/raw/iSarcasmEval/train/train.En.csv
+```
 
-### Baseline (TF-IDF + LinearSVC)
+### 3. Run Experiments
 
 ```bash
+# Baseline (TF-IDF + LinearSVC)
 python scripts/run_baseline.py
-# optionally override dataset path
-python scripts/run_baseline.py --data-dir data/raw/iSarcasmEval
-```
 
-### Transformer models
+# Fine-tune DistilBERT (MPS / CUDA auto-detected)
+python scripts/run_transformer.py --model distilbert-base-uncased --epochs 3 --batch-size 16 --lr 2e-5
 
-```bash
-# BERT
-python scripts/run_transformer.py --model bert-base-uncased
+# Fine-tune BERT-base
+python scripts/run_transformer.py --model bert-base-uncased --epochs 3 --batch-size 16 --lr 2e-5
 
-# DistilBERT
-python scripts/run_transformer.py --model distilbert-base-uncased
-
-# Additional options
-python scripts/run_transformer.py --model bert-base-uncased \
-    --epochs 5 --batch-size 16 --lr 3e-5
-```
-
-### Run everything sequentially
-
-```bash
+# Full evaluation pipeline
 python scripts/run_all.py
 ```
 
 ---
 
-## 3. Outputs
+## 🔬 Reproducibility
 
-All outputs are written to `outputs/`:
-
-| File | Description |
-|------|-------------|
-| `outputs/results.csv` | Shared comparison table (all models, all splits) |
-| `outputs/results_baseline.json` | Baseline metrics (val split) |
-| `outputs/results_<model>.json` | Transformer metrics (val split) |
-| `outputs/confusion_baseline.png` | Confusion matrix – baseline (val) |
-| `outputs/confusion_<model>_<split>.png` | Confusion matrix – transformer |
-| `outputs/models/<model>/` | Best checkpoint saved by Trainer |
+Global reproducibility is enforced in `src/utils/seed.py` by setting `RANDOM_SEED = 42` across Python, NumPy, PyTorch, and `TrainingArguments(seed=42)`. On CUDA backends, `torch.backends.cudnn.deterministic = True` is enabled.
 
 ---
 
-## 4. Configuration defaults
+## 4. Configuration Defaults
 
-All defaults live in [src/utils/config.py](src/utils/config.py):
+All defaults live in [`src/utils/config.py`](src/utils/config.py):
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -103,31 +114,10 @@ All defaults live in [src/utils/config.py](src/utils/config.py):
 | `VAL_SPLIT` | 0.15 | Fraction of training data used for validation |
 | `RANDOM_SEED` | 42 | Global random seed |
 
-Override any default by passing CLI flags (see §3).
-
 ---
 
-## 5. Reproducibility
+## 📚 References
 
-- `src/utils/seed.py` sets seeds for Python, NumPy, and PyTorch.
-- The HuggingFace `Trainer` receives the same seed via `TrainingArguments(seed=42)`.
-- `torch.backends.cudnn.deterministic = True` is set when CUDA is available.
-
----
-
-## Label mapping
-
-| Label | Meaning |
-|-------|---------|
-| 0 | non-sarcastic |
-| 1 | sarcastic |
-
-Defined once in `src/data/loader.py` (`_LABEL_COL = "sarcastic"`).
-
----
-
-## References
-
-- Abufarhah et al., *iSarcasmEval: Intended Sarcasm Detection in English and Arabic*, SemEval 2022 Task 6.
-  <https://aclanthology.org/2022.semeval-1.111>
-- Dataset: <https://github.com/iabufarha/iSarcasmEval>
+- Abu Farha et al. (2022). *SemEval-2022 Task 6: iSarcasmEval, Intended Sarcasm Detection in English and Arabic*. [ACL Anthology](https://aclanthology.org/2022.semeval-1.111)
+- Sanh et al. (2019). *DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter*. [arXiv:1910.01108](https://arxiv.org/abs/1910.01108)
+- Devlin et al. (2019). *BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding*. [NAACL-HLT 2019](https://aclanthology.org/N19-1423/)
